@@ -33,3 +33,6 @@ def init(ip):
 @manager.command
 def serv():
     pass
+
+if __name__ == "__main__":
+    manager.run()
