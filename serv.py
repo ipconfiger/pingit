@@ -10,8 +10,8 @@ import utils
 cache = utils.Cache("127.0.0.1",8)
 
 def worker(idx, ip):
+    node = cache.get("ip_%s"%idx)
     while(True):
-        node = cache.get("ip_%s"%idx)
         take_time = ping.do_one(ip,1,64)
         print ip, take_time
         if take_time:
