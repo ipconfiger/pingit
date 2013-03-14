@@ -19,7 +19,7 @@ cache = Cache('127.0.0.1',8)
 def index():
     return render_template("index.html",**locals())
 
-@manager.option('-ip',help="input ip")
+@manager.option('-p','--ip', help="input ip")
 def init(ip):
     count_item = cache.get("count")
     if count_item:
