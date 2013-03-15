@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-</head>
-<body>
-<ul>
-    {% for node in nodes %}
-    <li>ip:{{ node.ip }} &nbsp;takes &nbsp;{{ node.last_take }}s &nbsp;{{ node.live }}</li>
-    {% endfor %}
-</ul>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content%}
+it works
+{% endblock %}
