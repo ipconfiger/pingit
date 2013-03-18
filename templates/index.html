@@ -1,4 +1,27 @@
 {% extends "base.html" %}
 {% block content%}
-it works
+
+<div id="holder"><img src="{{ config.MEDIA_ROOT }}/img/loading.gif"></div>
+<div id="temp_loader" style="display: none;"></div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+        function check_alert(){
+            $("#temp_loader").load("{{ url_for("index.change") }}",{},function(response, status, xhr){
+                var text = $(this).html();
+                $(this).html("");
+                $("#holder").html(response);
+                $(".tooltips").tooltip();
+            });
+        }
+        function loop(){
+            check_alert();
+            setTimeout(function(){
+                loop();
+            },10000);
+        }
+        $(function(){
+            loop();
+        });
+    </script>
 {% endblock %}

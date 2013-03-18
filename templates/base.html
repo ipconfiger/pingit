@@ -2,12 +2,14 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-    <title></title>
+    <title>{{ g.config.site_title }}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="description" content="">
     <meta name="keywords" content="" />
-    <link rel="stylesheet" type="text/css" href="{{ config.MEDIA }}/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="{{ config.MEDIA_ROOT }}/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="{{ config.MEDIA_ROOT }}/css/ping.css"/>
     <script src="{{ config.MEDIA_ROOT }}/js/jquery-1.8.1.min.js"></script>
+    <script src="{{ config.MEDIA_ROOT }}/js/underscore-min.js"></script>
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -15,18 +17,19 @@
 <body>
 <div class="navbar navbar-fixed-top navbar-inverse">
     <div class="navbar-inner">
-        <div class="container">
-
-            <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </a>
-
+        <div class="container-fluid">
             <!-- Be sure to leave the brand out there if you want it shown -->
-            <a class="brand" href="#">Sagittarius</a>
-
+            <a class="brand" href="/">Sagittarius</a>
+            <ul class="nav">
+                <li><a href="{{ url_for("index.config_ip_view") }}">MANAGE</a></li>
+                <li class="divider-vertical"></li>
+                <li><a href="#edit_config" data-toggle="modal">CONFIG</a></li>
+                <li class="divider-vertical"></li>
+                <li><a href="#add_ip" data-toggle="modal">ADD</a></li>
+                <li class="divider-vertical"></li>
+                <li><a href="#apply_alert" data-toggle="modal">APPLY</a></li>
+                <li class="divider-vertical"></li>
+            </ul>
             <!-- Everything you want hidden at 940px or less, place within here -->
             <div class="nav-collapse collapse">
                 <!-- .nav, .navbar-search, .navbar-form, etc -->
@@ -35,9 +38,109 @@
         </div>
     </div>
 </div>
-<div class="container">
+<div class="container-fluid" style="margin-top: 60px;">
+    <div id="apply_info"></div>
     {% block content %}{% endblock %}
 </div>
+<div>
+    <!-- 下面是添加IP的模式窗口//-->
+    <div id="add_ip" class="modal hide fade">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>ADD IP OR IP RANGE</h3>
+        </div>
+        <div class="modal-body">
+            <p>
+            <div id="add_alert_holder"></div>
+            <form id="ip_add_form" class="form-inline" action="{{ url_for("index.add_new_ip") }}">
+                <input type="text" id="ip_addr" class="input-medium" placeholder="IP">
+                <input type="text" id="comment" class="input-large" placeholder="Comment">
+            </form>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+            <a id="add_ip_btn" href="#" class="btn btn-primary">Save changes</a>
+        </div>
+    </div>
+
+    <div id="edit_config" class="modal hide fade">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Edit Config</h3>
+        </div>
+        <div class="modal-body">
+            <p>
+                <div id="modify_info"></div>
+                <table class="table">
+                {% for key,value in g.config.data.iteritems() %}
+                    <tr>
+                        <td>{{ key }}:</td><td><input id="txt_{{ key }}" type="text" class="input-large" value="{{ value.data }}"></td><td><button class="btn btn-primary update_btn" type="button" data-key="{{ key }}">UPDATE</button></td>
+                    </tr>
+                {% endfor %}
+                </table>
+            </p>
+        </div>
+    </div>
+    <div id="apply_alert" class="modal hide fade">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Confirm Apply Changes</h3>
+        </div>
+        <div class="modal-body">
+            <p>If you choose confirm apply,the service will be restart</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+            <a href="#" class="btn btn-primary apply_btn">Confirm Apply</a>
+        </div>
+    </div>
+</div>
 </body>
+<script type="text/template" id="alert_tmp">
+    <div id="add_ip_alert" class="alert alert-error">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong>Warning!</strong> <span><%=info%></span>
+    </div>
+</script>
+<script type="text/template" id="info_tmp">
+    <div id="alert_info" class="alert alert-info">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>Great!</strong> <span><%=info%></span>
+    </div>
+</script>
+<script src="{{ config.MEDIA_ROOT }}/js/ping.js"></script>
 <script src="{{ config.MEDIA_ROOT }}/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+    var ip_alert_tmp = _.template($("#alert_tmp").html());
+    var info_tmp = _.template($("#info_tmp").html());
+    $(function(){
+       $("#add_ip_btn").click(function(){
+           post_ip_form_data();
+       });
+       $(".update_btn").click(function(){
+           var key = $(this).attr("data-key");
+           var data = $("txt_"+key).val();
+           $.post("{{ url_for("index.update_config") }}",{k:key,v:data},function(d){
+               if(d.rs){
+                   $("#modify_info").html(info_tmp({info:"Success!"}));
+               }else{
+                   $("#modify_info").html(ip_alert_tmp({info:"Unkown Error!!"}));
+               }
+               $(".alert").alert();
+           });
+       });
+       $(".apply_btn").click(function(){
+           $.post("{{ url_for("index.apply_changes") }}",{},function(d){
+              if(d.rs){
+                  $("#apply_alert").modal('hide');
+                  $("#apply_info").html(info_tmp({info:"Apply Successful!!"}))
+                  $(".alert").alert();
+
+              }
+           });
+       });
+    });
+</script>
+{% block scripts %}{% endblock %}
 </html>

@@ -1,0 +1,36 @@
+{% if groups %}
+<ul class="thumbnails">
+    {% for group in groups %}
+        <li class="span3">
+            <div class="thumbnail">
+                <legend>
+                    <a href="#" class="tooltips"  data-toggle="tooltip" data-placement="bottom" title="{{ group.comment }}" data-original-title="{{ group.comment }}">{{ group.group_id }}</a>
+                </legend>
+                <p>
+                <ul class="inline">
+                    <li>STATUS</li>
+                    <li>
+                    {% if group.id in alerts %}
+                        <span class="badge badge-important"><h4>Warning!!!</h4></span>
+                    {% else %}
+                        <span class="badge badge-success"><h4>Normal</h4></span>
+                    {% endif %}
+                    </li>
+                </ul>
+                </p>
+                <p>
+                    {% if group.id in alerts %}
+                        <ul class="error-ips clearfix">
+                            {% for resource in alerts[group.id][:4] %}
+                                <li><a href="#" class="label label-important tooltips"  data-toggle="tooltip" data-placement="right" title="{{ resource.comment }}" data-original-title="{{ resource.comment }}">{{ resource.ip_addr }}</a> </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </p>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+{% else %}
+    <img src="{{ config.MEDIA_ROOT }}/img/watchthis.png"/>
+{% endif %}

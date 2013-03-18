@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="row-fluid">
+        <div class="span2">
+            <ul class="nav nav-tabs nav-stacked">
+            {% for group in groups %}
+               <li><a href="javascript:void(0);" onclick="load_ip_data('{{ group.id }}')">{{ group.group_id }}</a></li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div class="span10">
+            <div id="error_holder"></div>
+            <div id="holder">
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts%}
+    <script type="text/javascript">
+        function show_loading(){
+            $("#holder").html("<img src=\"{{ config.MEDIA_ROOT }}/img/loading.gif\">");
+        }
+        function load_ip_data(group_id){
+            show_loading();
+            $("#holder").load("{{ url_for("index.load_ips") }}",{rcid:group_id},function(){
+                $("form button").click(function(){
+                    $.post("{{ url_for("index.update_group") }}",{gid:group_id,comment:$("#group_comment").val()},function(d){
+                        if(d.rs){
+                            alert("Success");
+                        }else{
+                            alert("Error");
+                        }
+                    },"json");
+                });
+
+                $(".btn-group .update").click(function(){
+                    var rcid = $(this).attr("data-id");
+                    var gid = $(this).attr("group-id");
+                    var comment_text = $("#comment_"+rcid).val();
+                    $.post("{{ url_for("index.update_comment") }}",{rcid:rcid,comment:comment_text},function(rt){
+                       if(rt.rs){
+                           load_ip_data(gid);
+                       }else{
+                           $("#error_holder").html(ip_alert_tmp({info:rt.info}));
+                       }
+                    });
+                });
+                $(".btn-group .delete").click(
+                    function(){
+                        var rcid = $(this).attr("data-id");
+                        var gid = $(this).attr("group-id");
+                        $.post("{{ url_for("index.reousce_delete") }}",{rcid:rcid},function(rt){
+                            if(rt.rs){
+                                load_ip_data(gid);
+                            }else{
+                                $("#error_holder").html(ip_alert_tmp({info:rt.info}));
+                            }
+                        });
+                    }
+                );
+
+            });
+        }
+
+    </script>
+{% endblock %}

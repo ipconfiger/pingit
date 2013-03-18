@@ -1,0 +1,10 @@
+.error-ips {
+    margin-left: 20px;
+    list-style: none;
+}
+
+.error-ips li{
+    float: left;
+    width: 50%;
+    line-height: 30px;
+}

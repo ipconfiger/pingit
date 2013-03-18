@@ -1,0 +1,35 @@
+<div class="well-small">
+    <form class="form-inline">
+        <input id="group_comment" type="text" class="input-xxlarge" placeholder="comment" value="{{ group.comment }}">
+        <button type="button" class="btn btn-primary">UPDATE</button>
+    </form>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <td>IP</td>
+            <td>Comment</td>
+            <td>Operation</td>
+        </tr>
+    </thead>
+    <tbody>
+    {% for rc in items %}
+        <tr {% if rc.removed %}class="error"{% endif %}>
+            <td class="span2">{{ rc.ip_addr }}</td>
+            <td class="span6"><input type="text" class="input-xxlarge" id="comment_{{ rc.id }}" value="{{ rc.comment }}"></td>
+            <td class="span2">
+                <div class="btn-group">
+                    <button class="btn update" data-id="{{ rc.id }}" group-id="{{ group_id }}">UPDATE</button>
+                    <button class="btn delete" data-id="{{ rc.id }}" group-id="{{ group_id }}">
+                        {% if rc.removed %}
+                            RESUME
+                        {% else %}
+                            DELETE
+                        {% endif %}
+                    </button>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
