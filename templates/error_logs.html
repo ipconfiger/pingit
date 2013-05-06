@@ -1,9 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
 
-</body>
-</html>
+    <table class="table">
+    {% for info in logs %}
+    <tr>
+        <td>{{ info.ip.ip_addr }}</td>
+        <td>{{ info.ip.comment }}</td>
+        <td>{{ info.comment }}</td>
+        <td>{{ info.ip.create_time|dateTime }}</td>
+        <td><a class="err_log" err_id="{{ info.id }}" hide="1" href="javascript:void(0);">(log)</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% include "_pager.html" %}
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+    function regist_log(){
+            $(".err_log").click(function(){
+                var err_id = $(this).attr("err_id");
+                var hide = $(this).attr("hide");
+                var comment = prompt("Add your comment");
+                if (comment){
+                    $.post('{{ url_for("index.append_log") }}',{error_id:err_id, hide:hide, comment:comment},function(d){
+                        if (d.rs){
+                            location.reload();
+                        }else{
+                            alert(d.info);
+                        }
+                    },"json");
+                }
+            });
+        }
+    $(function(){
+       regist_log();
+    });
+    </script>
+{% endblock %}

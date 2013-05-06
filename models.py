@@ -28,56 +28,72 @@ class DeclaredBase(object):
 
 Base = declarative_base(cls=DeclaredBase)
 
-class ResourceGroup(Base):
-    group_id = Column(Integer)
-    resource_id = Column(Integer)
-    __table_args__ =(
-        UniqueConstraint(group_id,resource_id,),
-        TABLEARGS
-    )
-    def __init__(self, group, resource):
-        self.group_id = group.id
-        self.resource_id = resource.id
-
-class Group(Base):
-    group_id = Column(String(20), unique=True)
-    comment = Column(Text)
-    def __init__(self, ip, text):
-        self.group_id = ip
-        self.comment = text
-
-    @property
-    def IPs(self):
-        for resourcegroup in g.db.query(ResourceGroup).filter(ResourceGroup.group_id==self.id):
-            yield g.db.query(Resource).get(resourcegroup.resource_id)
-
-
 
 
 class Resource(Base):
     ip_addr = Column(String(15))
+    forward_id = Column(Integer)
     status = Column(Integer, default=0, index=True, doc="0:初始化1:正常2:有丢表3:全丢")
     comment = Column(Text)
+    pingit = Column(Boolean)
 
     __table_args__ = (
         UniqueConstraint(ip_addr,),
         TABLEARGS
     )
 
-    def __init__(self,ip,comment):
+    def __init__(self, ip, comment, forward_id = 0, allowed_ping = False):
+        self.forward_id = forward_id
         self.ip_addr = ip
         self.comment =  comment
-
-    @property
-    def groups(self):
-        for resourcegroup in g.db.query(ResourceGroup).filter(ResourceGroup.resource_id==self.id):
-            yield g.db.query(Group).get(resourcegroup.group_id)
+        self.pingit =  allowed_ping
 
     def change(self):
         if self.removed:
             self.removed = False
         else:
             self.removed = True
+
+    @property
+    def path(self):
+        father = g.db.query(Resource).get(self.forward_id)
+        if father:
+            yield father
+            father.path
+
+    @property
+    def next_ips(self):
+        return g.db.query(Resource).filter(Resource.forward_id==self.id).order_by(Resource.id.asc())
+
+
+class ErrorLog(Base):
+    error_id = Column(String(32))
+    resource_id = Column(Integer)
+    comment = Column(Text)
+    error = Column(Boolean)
+    show = Column(Boolean)
+    __table_args__ = (
+        UniqueConstraint(error_id,),
+        TABLEARGS
+    )
+
+    def __init__(self, error_id, resource_id):
+        self.error_id = error_id
+        self.resource_id = resource_id
+        self.comment = "No Comment:add something"
+        self.error = True
+        self.show =True
+
+    def update(self, comment, hide):
+        self.comment = comment
+        if hide:
+            self.show = False
+        g.db.flush()
+        g.db.commit()
+
+    @property
+    def ip(self):
+        return g.db.query(Resource).get(self.resource_id) or dict(ip_addr="deleted",comment="deleted",create_time=datetime.datetime.now())
 
 
 class Config(Base):

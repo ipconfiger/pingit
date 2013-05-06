@@ -10,7 +10,8 @@ function post_ip_form_data(){
     var url = $("#ip_add_form").attr("action");
     var data = {
         addr:$("#ip_addr").val(),
-        comment:$("#comment").val()
+        comment:$("#comment").val(),
+        forward:$("#forward_id").val()
     };
     $.post(url,data,function(rt){
         if (rt.rs){

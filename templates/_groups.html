@@ -1,36 +1,27 @@
-{% if groups %}
+{% if alerts %}
 <ul class="thumbnails">
-    {% for group in groups %}
-        <li class="span3">
-            <div class="thumbnail">
-                <legend>
-                    <a href="#" class="tooltips"  data-toggle="tooltip" data-placement="bottom" title="{{ group.comment }}" data-original-title="{{ group.comment }}">{{ group.group_id }}</a>
-                </legend>
-                <p>
-                <ul class="inline">
-                    <li>STATUS</li>
-                    <li>
-                    {% if group.id in alerts %}
-                        <span class="badge badge-important"><h4>Warning!!!</h4></span>
-                    {% else %}
-                        <span class="badge badge-success"><h4>Normal</h4></span>
-                    {% endif %}
-                    </li>
-                </ul>
-                </p>
-                <p>
-                    {% if group.id in alerts %}
-                        <ul class="error-ips clearfix">
-                            {% for resource in alerts[group.id][:4] %}
-                                <li><a href="#" class="label label-important tooltips"  data-toggle="tooltip" data-placement="right" title="{{ resource.comment }}" data-original-title="{{ resource.comment }}">{{ resource.ip_addr }}</a> </li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </p>
-            </div>
-        </li>
-    {% endfor %}
+{% for alert in alerts %}
+  <li class="span4 alert-error">
+    <div class="thumbnail">
+      <h5 class="text-center">
+      <a href="#" class="popup" data-toggle="popover" data-placement="bottom" data-content="{{ alert.ip.comment }}" title data-original-title="error at {{ alert.ip.create_time|dateTime }}">{{ alert.ip.ip_addr }}</a>
+      (<a class="err_log" err_id="{{ alert.id }}" hide="0" href="javascript:void(0);">log</a>)
+      </h5>
+    </div>
+  </li>
+{% endfor %}
 </ul>
 {% else %}
-    <img src="{{ config.MEDIA_ROOT }}/img/watchthis.png"/>
+    <div class="alert alert-info">Is's all right</div>
 {% endif %}
+
+<table class="table">
+    {% for info in logs %}
+    <tr>
+        <td>{{ info.ip.ip_addr }}</td>
+        <td>{{ info.ip.comment }}</td>
+        <td>{{ info.ip.create_time|dateTime }}</td>
+        <td><a class="err_log" err_id="{{ info.id }}" hide="1" href="javascript:void(0);">(log)</a></td>
+    </tr>
+    {% endfor %}
+</table>

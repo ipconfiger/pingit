@@ -63,20 +63,6 @@ def init_db():
     biz.init_config()
     print "done"
 
-@manager.command
-def monitor(execute_path):
-    def on_message(channel,message):
-        print channel, message
-        logging.info("channel %s get message %s"%(channel, message))
-        if message == "reboot":
-            exit_code = os.system(execute_path)
-            info = "command %s exit with %s"%(execute_path, exit_code)
-            print info
-            logging.info(info)
-
-    g.cache = cache
-    g.cache.listen(on_message)
-
 
 if __name__ == "__main__":
     manager.run()

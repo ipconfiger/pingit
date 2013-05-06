@@ -9,55 +9,38 @@ from models import *
 def valid_ip(ip):
     return int(ip.split(".")[3]) not in [0,255]
 
-def _save_group(addr,ips,comment):
-    if len(ips)<2:
-        addr = ".".join(addr.split(".")[:3]+["0"])+"/24"
-    if g.db.query(Group).filter(Group.group_id==addr).count()<1:
-        group = Group(addr,comment)
-        g.db.add(group)
-        g.db.flush()
-    else:
-        group = g.db.query(Group).filter(Group.group_id==addr).one()
-    return group
 
-def _save_relation(group,resource):
-    if g.db.query(ResourceGroup).filter(ResourceGroup.group_id==group.id,ResourceGroup.resource_id==resource.id).count()<1:
-        resourcegroup = ResourceGroup(group,resource)
-        g.db.add(resourcegroup)
-        g.db.flush()
-
-def add_ip(addr, comment):
+def add_ip(addr, comment, forward_id):
     ips = [str(ip) for ip in IP(addr) if valid_ip(str(ip))]
-    group = _save_group(addr, ips, comment)
     for ip in ips:
-        if g.db.query(Resource).filter(Resource.ip_addr==ip).count()<1:
-            resource = Resource(ip,comment)
-            g.db.add(resource)
-            g.db.flush()
-        else:
-            resource = g.db.query(Resource).filter(Resource.ip_addr==ip).one()
-        _save_relation(group, resource)
+        g.db.add(Resource(ip,comment,forward_id=forward_id, allowed_ping=True))
+    g.db.flush()
     g.db.commit()
 
-def get_groups():
-    return list(g.db.query(Group).filter(Group.removed==False).all())
 
-def get_group(group_id):
-    return g.db.query(Group).get(group_id)
+def get_res(res):
+    for r in res.next_ips:
+        get_res(r)
+        g.db.delete(r)
 
-def get_resources(group_id):
-    for resourcegroup in g.db.query(ResourceGroup).filter(ResourceGroup.group_id==group_id):
-        yield g.db.query(Resource).get(resourcegroup.resource_id)
+def delete_ip(ipid):
+    resource = g.db.query(Resource).get(ipid)
+    for res in resource.next_ips:
+        get_res(res)
+        g.db.delete(res)
+    g.db.delete(resource)
+    g.db.flush()
+    g.db.commit()
 
-def get_alerts():
-    group_alert = {}
-    for resource in g.db.query(Resource).filter(Resource.status>1):
-        for group in resource.groups:
-            if group.id in group_alert:
-                group_alert[group.id].append(resource)
-            else:
-                group_alert[group.id] = [resource,]
-    return group_alert
+
+
+
+def current_alerts():
+    return g.db.query(ErrorLog).filter(ErrorLog.error==True).order_by(ErrorLog.id.desc())
+
+def normal_log():
+    return g.db.query(ErrorLog).filter(ErrorLog.error==False,ErrorLog.show==True).order_by(ErrorLog.id.desc())
+
 
 class ConfigDict(object):
     def __init__(self, db):

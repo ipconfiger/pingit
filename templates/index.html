@@ -1,8 +1,17 @@
 {% extends "base.html" %}
 {% block content%}
+<div class="row-fluid">
+    <div class="span4">
+        <div id="holder"><img src="{{ config.MEDIA_ROOT }}/img/loading.gif"></div>
+        <div id="temp_loader" style="display: none;"></div>
+    </div>
+    <div class="span6">
 
-<div id="holder"><img src="{{ config.MEDIA_ROOT }}/img/loading.gif"></div>
-<div id="temp_loader" style="display: none;"></div>
+    </div>
+</div>
+
+
+
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript">
@@ -11,7 +20,8 @@
                 var text = $(this).html();
                 $(this).html("");
                 $("#holder").html(response);
-                $(".tooltips").tooltip();
+                regist_log();
+                $(".popup").popover();
             });
         }
         function loop(){
@@ -19,6 +29,22 @@
             setTimeout(function(){
                 loop();
             },10000);
+        }
+        function regist_log(){
+            $(".err_log").click(function(){
+                var err_id = $(this).attr("err_id");
+                var hide = $(this).attr("hide");
+                var comment = prompt("Add your comment");
+                if (comment){
+                    $.post('{{ url_for("index.append_log") }}',{error_id:err_id, hide:hide, comment:comment},function(d){
+                        if (d.rs){
+                            check_alert();
+                        }else{
+                            alert(d.info);
+                        }
+                    },"json");
+                }
+            });
         }
         $(function(){
             loop();

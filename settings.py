@@ -5,7 +5,7 @@ import os
 DEBUG = True
 LOCAL = True
 if LOCAL:
-    DB_URI = "mysql://root:123456@127.0.0.1:3306/ping?charset=utf8"
+    DB_URI = "postgresql+psycopg2://apple:@localhost/pingit"
 else:
     DB_URI = "mysql://root:zzf12345@127.0.0.1:3306/ping?charset=utf8"
 
